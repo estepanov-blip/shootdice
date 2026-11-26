@@ -7,6 +7,8 @@
 | SD-03 | Cloudflare Workers Builds + Mini App в BotFather | P0 |
 | SD-04 | Аудио: удар кубиков, улица, бит; mute; ленивая загрузка | P1 |
 | SD-05 | Анимации персонажей idle/throw/win/lose | P1 |
-| SD-06 | Онлайн 1v1: сервер (Node + Socket.IO + PostgreSQL), авторитетные кубики, initData-подпись, rejoin | Milestone 2 |
+| SD-06 | ~~Онлайн 1v1~~ — сделано в v0.2 на Cloudflare Workers + Durable Objects (как Dog Fight) вместо Node + Socket.IO + PostgreSQL из TECH.md | Done |
+| SD-09 | Отмена открытого вызова; тексты бота на EN | P2 |
+| SD-10 | Свой домен (стабильность *.workers.dev в РФ) | P1 |
 | SD-07 | Лобби, приглашения друзей, комнаты до 6 | Milestone 3 |
 | SD-08 | XP и косметика (ранги Nobody → Street Legend) — без влияния на игру, без лидербордов по тратам | Later |

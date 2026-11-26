@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react'
-import { matchOutcome, type MatchState } from '../game/rules'
+import { useEffect, useRef, useState } from 'react'
+import type { MatchState } from '../game/rules'
+import type { Names } from './hud'
 import type { Strings } from './strings'
 
-export function RulesOverlay({ t, onClose }: { t: Strings; onClose(): void }) {
+export function RulesOverlay({ t, onClose, onSurrender }: { t: Strings; onClose(): void; onSurrender?: () => void }) {
   const btn = useRef<HTMLButtonElement>(null)
+  const [confirm, setConfirm] = useState(false)
   useEffect(() => {
     btn.current?.focus()
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -27,62 +29,89 @@ export function RulesOverlay({ t, onClose }: { t: Strings; onClose(): void }) {
         <button ref={btn} className="btn primary" onClick={onClose}>
           {t.close}
         </button>
+        {onSurrender &&
+          (confirm ? (
+            <div className="surrender-confirm">
+              <p>{t.surrenderConfirm}</p>
+              <div className="row">
+                <button className="btn danger" onClick={onSurrender} data-testid="surrender-yes">
+                  {t.surrender}
+                </button>
+                <button className="btn ghost dark-text" onClick={() => setConfirm(false)}>
+                  {t.cancel}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button className="link-btn" onClick={() => setConfirm(true)} data-testid="surrender">
+              ⚑ {t.surrender}
+            </button>
+          ))}
       </div>
     </div>
   )
 }
 
-interface ResultsProps {
-  t: Strings
-  botName: string
-  match: MatchState
-  onAgain(): void
-  onHome(): void
+interface Action {
+  label: string
+  onClick(): void
+  testId?: string
 }
 
-export function ResultsOverlay({ t, botName, match, onAgain, onHome }: ResultsProps) {
-  const o = matchOutcome(match)
+interface ResultProps {
+  t: Strings
+  names: Names
+  /** Viewer perspective ('player' = viewer). */
+  match: MatchState
+  tone: 'win' | 'lose' | 'draw'
+  reason?: string
+  note?: React.ReactNode
+  primary: Action
+  secondary: Action
+}
+
+export function ResultSheet({ t, names, match, tone, reason, note, primary, secondary }: ResultProps) {
   const again = useRef<HTMLButtonElement>(null)
   useEffect(() => again.current?.focus(), [])
-  if (!o) return null
-  const title = o.draw ? t.draw : o.winner === 'player' ? t.win : t.lose
-  const tone = o.draw ? 'draw' : o.winner === 'player' ? 'win' : 'lose'
+  const title = tone === 'draw' ? t.draw : tone === 'win' ? t.win : t.lose
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="results-title">
       <div className={`sheet results ${tone}`}>
         <h2 id="results-title" className="results-title" data-testid="results-title">
           {title}
         </h2>
+        {reason && <div className="results-reason">{reason}</div>}
         <div className="results-score">
           <div>
-            <div className="rs-name">{t.you}</div>
-            <div className="rs-num">{o.scores.player}</div>
+            <div className="rs-name">{names.me}</div>
+            <div className="rs-num">{match.scores.player}</div>
           </div>
           <div className="rs-sep">:</div>
           <div>
-            <div className="rs-name">{botName}</div>
-            <div className="rs-num">{o.scores.bot}</div>
+            <div className="rs-name">{names.opp}</div>
+            <div className="rs-num">{match.scores.bot}</div>
           </div>
         </div>
-        <div className="rounds-log">
-          <div className="rl-title">{t.roundsLog}</div>
-          {match.rounds.map((r) => (
-            <div key={r.round} className={`rl-row ${r.winner === 'player' ? 'w' : 'l'}`}>
-              <span>#{r.round}</span>
-              <span>{t.shooter(r.shooter, botName)}</span>
-              <span>
-                {t.kindBanner(r.kind, r.point).replace('!', '')}
-              </span>
-              <span>{r.winner === 'player' ? '+100' : '—'}</span>
-            </div>
-          ))}
-        </div>
+        {match.rounds.length > 0 && (
+          <div className="rounds-log">
+            <div className="rl-title">{t.roundsLog}</div>
+            {match.rounds.map((r) => (
+              <div key={r.round} className={`rl-row ${r.winner === 'player' ? 'w' : 'l'}`}>
+                <span>#{r.round}</span>
+                <span>{r.shooter === 'player' ? names.me : names.opp}</span>
+                <span>{t.kindBanner(r.kind, r.point).replace('!', '')}</span>
+                <span>{r.winner === 'player' ? '+100' : '—'}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {note}
         <div className="results-actions">
-          <button ref={again} className="btn primary" onClick={onAgain} data-testid="again">
-            {t.playAgain}
+          <button ref={again} className="btn primary" onClick={primary.onClick} data-testid={primary.testId ?? 'again'}>
+            {primary.label}
           </button>
-          <button className="btn ghost" onClick={onHome}>
-            {t.home}
+          <button className="btn ghost" onClick={secondary.onClick} data-testid={secondary.testId}>
+            {secondary.label}
           </button>
         </div>
       </div>
