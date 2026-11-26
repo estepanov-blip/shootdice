@@ -1,7 +1,7 @@
 {
   "name": "shootdice",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "SHOOT DICE \u2014 Street Dice Club. Telegram Mini App: practice vs bot + duels with friends.",
   "scripts": {
@@ -20,6 +20,7 @@
   "dependencies": {
     "@fontsource/oswald": "^5.3.0",
     "@fontsource/permanent-marker": "^5.3.0",
+    "@fontsource/rubik-dirt": "^5.3.0",
     "phaser": "^3.90.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

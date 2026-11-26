@@ -29,7 +29,7 @@ with sync_playwright() as p:
             puck_on = pg.locator('.point-puck.on').count()>0
             if puck_on and not shots['point'] and not dis:
                 pg.screenshot(path=f'{out}/{tag}_03_point.png'); shots['point']=True
-            if dis and not shots['bot'] and ('lou' in label or 'лу' in label):
+            if dis and not shots['bot'] and ('roc' in label or 'рок' in label):
                 pg.screenshot(path=f'{out}/{tag}_04_bot_turn.png'); shots['bot']=True
             if not dis:
                 if (('next' in label) or ('следующий' in label)) and not shots['roundEnd']:

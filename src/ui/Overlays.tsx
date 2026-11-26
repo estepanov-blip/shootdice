@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { PORTRAITS } from '../assets/manifest'
 import type { MatchState } from '../game/rules'
+import { Crown } from './art'
 import type { Names } from './hud'
 import type { Strings } from './strings'
 
@@ -77,6 +79,17 @@ export function ResultSheet({ t, names, match, tone, reason, note, primary, seco
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="results-title">
       <div className={`sheet results ${tone}`}>
+        <div className="results-faces" aria-hidden="true">
+          <span className={`rf ${tone === 'win' ? 'won' : tone === 'lose' ? 'lost' : ''}`}>
+            {tone === 'win' && <Crown className="rf-crown" />}
+            <img src={PORTRAITS.player} alt="" />
+          </span>
+          <span className="rf-vs">VS</span>
+          <span className={`rf ${tone === 'lose' ? 'won' : tone === 'win' ? 'lost' : ''}`}>
+            {tone === 'lose' && <Crown className="rf-crown" />}
+            <img src={PORTRAITS.bot} alt="" />
+          </span>
+        </div>
         <h2 id="results-title" className="results-title" data-testid="results-title">
           {title}
         </h2>

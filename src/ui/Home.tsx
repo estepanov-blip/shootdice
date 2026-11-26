@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ART } from '../assets/manifest'
+import { Crown, Logo } from './art'
 import { RulesOverlay } from './Overlays'
 import type { Lang, Strings } from './strings'
 
@@ -20,50 +21,54 @@ export function Home({ t, lang, online, inTelegram, challenging, error, onLang, 
   const [rules, setRules] = useState(false)
   return (
     <div className="screen home" style={{ backgroundImage: `url(${ART.background.url})` }}>
+      <img className="home-hero" src={ART.charPlayer.url} alt="" />
       <div className="home-top">
         <button className="lang-btn" onClick={() => onLang(lang === 'en' ? 'ru' : 'en')} aria-label="Language">
           {lang === 'en' ? 'RU' : 'EN'}
         </button>
       </div>
-      <div className="logo" aria-label="Shoot Dice">
-        <div className="logo-shoot">SHOOT</div>
-        <div className="logo-dice">DICE</div>
-        <div className="logo-tag">{t.tagline}</div>
-      </div>
-      <img className="home-hero" src={ART.charPlayer.url} alt="" />
+      <Logo tagline={t.tagline} />
       <nav className="home-menu">
         {online ? (
           <>
-            <button className="btn primary big" onClick={onChallenge} disabled={challenging} data-testid="challenge">
-              🎲 {challenging ? t.sending : t.challenge}
+            <button className="btn torn primary big" onClick={onChallenge} disabled={challenging} data-testid="challenge">
+              <Crown className="btn-crown" />
+              <span className="btn-main">▶ {challenging ? t.sending : t.challenge}</span>
               <small>{t.challengeSub}</small>
             </button>
             <div className="row2">
-              <button className="btn dark" onClick={onDuels} data-testid="duels">
+              <button className="btn torn dark" onClick={onDuels} data-testid="duels">
                 {t.myDuels}
               </button>
-              <button className="btn dark" onClick={onPractice} data-testid="practice">
+              <button className="btn torn dark" onClick={onPractice} data-testid="practice">
                 {t.practice}
               </button>
             </div>
           </>
         ) : (
           <>
-            <button className="btn primary big" onClick={onPractice} data-testid="practice">
-              ▶ {t.practice}
+            <button className="btn torn primary big" onClick={onPractice} data-testid="practice">
+              <Crown className="btn-crown" />
+              <span className="btn-main">▶ {t.practice}</span>
               <small>{t.practiceSub}</small>
             </button>
             {!inTelegram && (
-              <button className="btn dark" disabled>
+              <button className="btn torn dark" disabled>
                 {t.online} <em>· {t.duelsInTelegram}</em>
               </button>
             )}
           </>
         )}
         {error && <p className="panel-error">{error}</p>}
-        <button className="btn dark" onClick={() => setRules(true)}>
-          {t.rules}
-        </button>
+        <div className="home-bottom">
+          <button className="btn torn dark small" onClick={() => setRules(true)}>
+            {t.rules}
+          </button>
+          <div className="polaroid" aria-label={t.location}>
+            <img src={ART.background.url} alt="" />
+            <span className="polaroid-label">📍 {t.location}</span>
+          </div>
+        </div>
         <p className="disclaimer">{t.disclaimer}</p>
       </nav>
       {rules && <RulesOverlay t={t} onClose={() => setRules(false)} />}

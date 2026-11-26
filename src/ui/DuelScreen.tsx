@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BACKGROUNDS, PORTRAITS } from '../assets/manifest'
 import { ROLL_ANIM_MS } from '../game/PracticeScene'
 import { ApiError, type Api } from '../online/api'
 import { DuelController } from '../online/DuelController'
@@ -25,6 +26,8 @@ interface Props {
   onBack(): void
   onOpen(id: string): void
 }
+
+const panelBg = { backgroundImage: `url(${BACKGROUNDS.cornerStore.url})` }
 
 const short = (s: string | undefined, fallback: string) => {
   const v = (s || fallback).trim()
@@ -146,7 +149,7 @@ export function DuelScreen({ id, api, t, platform, reducedMotion, onBack, onOpen
   // ------------------------------------------------------------------ not started yet
   if (!duel) {
     return (
-      <div className="screen panel-screen">
+      <div className="screen panel-screen" style={panelBg}>
         <div className="panel">
           {error ? (
             <>
@@ -170,10 +173,16 @@ export function DuelScreen({ id, api, t, platform, reducedMotion, onBack, onOpen
     const challenger = duel.players[0]
     const mine = duel.me === 0
     return (
-      <div className="screen panel-screen">
+      <div className="screen panel-screen" style={panelBg}>
         <div className="panel">
-          <div className="panel-dice" aria-hidden="true">
-            🎲
+          <div className="vs-row" aria-hidden="true">
+            <span className="vs-face me">
+              <img src={PORTRAITS.player} alt="" />
+            </span>
+            <span className="vs-word">{t.vs}</span>
+            <span className="vs-face opp">
+              <img src={PORTRAITS.bot} alt="" />
+            </span>
           </div>
           {mine ? (
             <>
@@ -223,7 +232,7 @@ export function DuelScreen({ id, api, t, platform, reducedMotion, onBack, onOpen
 
   if (duel.me === null) {
     return (
-      <div className="screen panel-screen">
+      <div className="screen panel-screen" style={panelBg}>
         <div className="panel">
           <h2>{t.takenTitle}</h2>
           <button className="btn ghost" onClick={onBack}>
@@ -290,6 +299,8 @@ export function DuelScreen({ id, api, t, platform, reducedMotion, onBack, onOpen
         label={btn.label}
         disabled={btn.disabled}
         waiting={btn.waiting}
+        myTurn={!btn.disabled && duel.status === 'active' && duel.yourTurn && ctrl.inSync()}
+        yourTurnLabel={t.yourTurn}
         onPrimary={primary}
         onLeft={onBack}
         leftLabel={t.myDuels}
