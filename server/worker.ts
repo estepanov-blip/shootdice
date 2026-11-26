@@ -206,7 +206,7 @@ async function handleWebhook(req: Request, env: Env, url: URL): Promise<Response
         chat_id: msg.chat.id,
         parse_mode: 'HTML',
         text:
-          '🎲 <b>SHOOT DICE — Street Dice Club</b>\n\nТри раунда уличных костей. Тренируйся против Биг Лу или вызови друга — бот напишет, когда твой бросок.\nТолько очки: без денег и ставок.',
+          '🎲 <b>SHOOT DICE — Street Dice Club</b>\n\nТри раунда уличных костей. Тренируйся против Big Roc или вызови друга — бот напишет, когда твой бросок.\nТолько очки: без денег и ставок.',
         reply_markup: { inline_keyboard: [[{ text: '🎲 Играть', web_app: { url: url.origin } }]] },
       })
       .catch(() => {})

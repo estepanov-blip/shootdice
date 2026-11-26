@@ -1,0 +1,360 @@
+{
+  "version": "1.0",
+  "purpose": "art integration into existing build",
+  "assets": [
+    {
+      "key": "corner_store",
+      "path": "assets/backgrounds/corner_store.webp",
+      "width": 540,
+      "height": 960,
+      "status": "prototype_ready",
+      "has_transparency": false
+    },
+    {
+      "key": "the_block",
+      "path": "assets/backgrounds/the_block.webp",
+      "width": 540,
+      "height": 960,
+      "status": "prototype_ready",
+      "has_transparency": false
+    },
+    {
+      "key": "underground",
+      "path": "assets/backgrounds/underground.webp",
+      "width": 540,
+      "height": 960,
+      "status": "prototype_ready",
+      "has_transparency": false
+    },
+    {
+      "key": "big_roc_avatar",
+      "path": "draft_assets/characters/big_roc_avatar.webp",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_placeholder",
+      "has_transparency": false
+    },
+    {
+      "key": "big_roc_idle",
+      "path": "draft_assets/characters/big_roc_idle.webp",
+      "width": 512,
+      "height": 768,
+      "status": "prototype_placeholder",
+      "has_transparency": true
+    },
+    {
+      "key": "killa_tee_avatar",
+      "path": "draft_assets/characters/killa_tee_avatar.webp",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_placeholder",
+      "has_transparency": false
+    },
+    {
+      "key": "killa_tee_idle",
+      "path": "draft_assets/characters/killa_tee_idle.webp",
+      "width": 512,
+      "height": 768,
+      "status": "prototype_placeholder",
+      "has_transparency": true
+    },
+    {
+      "key": "ivory_1",
+      "path": "assets/dice/ivory_1.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "ivory_2",
+      "path": "assets/dice/ivory_2.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "ivory_3",
+      "path": "assets/dice/ivory_3.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "ivory_4",
+      "path": "assets/dice/ivory_4.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "ivory_5",
+      "path": "assets/dice/ivory_5.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "ivory_6",
+      "path": "assets/dice/ivory_6.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "red_1",
+      "path": "assets/dice/red_1.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "red_2",
+      "path": "assets/dice/red_2.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "red_3",
+      "path": "assets/dice/red_3.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "red_4",
+      "path": "assets/dice/red_4.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "red_5",
+      "path": "assets/dice/red_5.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "red_6",
+      "path": "assets/dice/red_6.png",
+      "width": 256,
+      "height": 256,
+      "status": "prototype_ready",
+      "has_transparency": true
+    },
+    {
+      "key": "killa_actions_defeat",
+      "path": "references/storyboards/killa_actions_defeat.webp",
+      "width": 424,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "killa_actions_reaction",
+      "path": "references/storyboards/killa_actions_reaction.webp",
+      "width": 424,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "killa_actions_ready",
+      "path": "references/storyboards/killa_actions_ready.webp",
+      "width": 424,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "killa_actions_throw",
+      "path": "references/storyboards/killa_actions_throw.webp",
+      "width": 425,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "killa_actions_victory",
+      "path": "references/storyboards/killa_actions_victory.webp",
+      "width": 425,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "roc_actions_wrong_outfit_defeat",
+      "path": "references/storyboards/roc_actions_wrong_outfit_defeat.webp",
+      "width": 424,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "roc_actions_wrong_outfit_reaction",
+      "path": "references/storyboards/roc_actions_wrong_outfit_reaction.webp",
+      "width": 424,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "roc_actions_wrong_outfit_ready",
+      "path": "references/storyboards/roc_actions_wrong_outfit_ready.webp",
+      "width": 424,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "roc_actions_wrong_outfit_throw",
+      "path": "references/storyboards/roc_actions_wrong_outfit_throw.webp",
+      "width": 425,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "roc_actions_wrong_outfit_victory",
+      "path": "references/storyboards/roc_actions_wrong_outfit_victory.webp",
+      "width": 425,
+      "height": 625,
+      "status": "draft_reference",
+      "has_transparency": false
+    },
+    {
+      "key": "button_disabled",
+      "path": "draft_assets/ui/button_disabled.png",
+      "width": 480,
+      "height": 100,
+      "status": "prototype_placeholder",
+      "has_transparency": true
+    },
+    {
+      "key": "button_primary",
+      "path": "draft_assets/ui/button_primary.png",
+      "width": 480,
+      "height": 100,
+      "status": "prototype_placeholder",
+      "has_transparency": true
+    },
+    {
+      "key": "button_secondary",
+      "path": "draft_assets/ui/button_secondary.png",
+      "width": 480,
+      "height": 100,
+      "status": "prototype_placeholder",
+      "has_transparency": true
+    },
+    {
+      "key": "ref_lineup_a",
+      "path": "references/lineup_a.png",
+      "width": 941,
+      "height": 1672,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_underground",
+      "path": "references/underground.png",
+      "width": 1672,
+      "height": 941,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_gameplay",
+      "path": "references/gameplay.png",
+      "width": 1086,
+      "height": 1448,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_corner_store",
+      "path": "references/corner_store.png",
+      "width": 1672,
+      "height": 941,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_dice_design",
+      "path": "references/dice_design.png",
+      "width": 1774,
+      "height": 887,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_roc_actions_wrong_outfit",
+      "path": "references/roc_actions_wrong_outfit.png",
+      "width": 2172,
+      "height": 724,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_big_roc",
+      "path": "references/big_roc.png",
+      "width": 1024,
+      "height": 1536,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_lineup_b",
+      "path": "references/lineup_b.png",
+      "width": 941,
+      "height": 1672,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_killa_actions",
+      "path": "references/killa_actions.png",
+      "width": 2172,
+      "height": 724,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_menu",
+      "path": "references/menu.png",
+      "width": 1086,
+      "height": 1448,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_the_block",
+      "path": "references/the_block.png",
+      "width": 1672,
+      "height": 941,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_ui_design",
+      "path": "references/ui_design.png",
+      "width": 1024,
+      "height": 1536,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_killa_tee",
+      "path": "references/killa_tee.png",
+      "width": 1024,
+      "height": 1536,
+      "status": "reference_only"
+    },
+    {
+      "key": "ref_vfx_design",
+      "path": "references/vfx_design.png",
+      "width": 1672,
+      "height": 941,
+      "status": "reference_only"
+    }
+  ]
+}

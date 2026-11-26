@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import { BACKGROUNDS, PORTRAITS } from '../assets/manifest'
 import type { Api } from '../online/api'
 import type { DuelSummary, LeaderRow, MeResponse } from '../online/protocol'
 import type { Platform } from '../platform/telegram'
+import { Crown } from './art'
 import type { Strings } from './strings'
 
 interface Props {
@@ -43,7 +45,7 @@ export function DuelsScreen({ api, t, platform, challenging, onChallenge, onOpen
   const rows: LeaderRow[] = me?.boards ? me.boards[tab] : []
 
   return (
-    <div className="screen list-screen">
+    <div className="screen list-screen" style={{ backgroundImage: `url(${BACKGROUNDS.underground.url})` }}>
       <header className="list-head">
         <button className="icon-btn" onClick={onBack} aria-label={t.back}>
           ←
@@ -51,8 +53,9 @@ export function DuelsScreen({ api, t, platform, challenging, onChallenge, onOpen
         <h1>{t.myDuels}</h1>
       </header>
       <div className="list-body">
-        <button className="btn primary big" onClick={onChallenge} disabled={challenging} data-testid="challenge">
-          🎲 {challenging ? t.sending : t.challenge}
+        <button className="btn torn primary big" onClick={onChallenge} disabled={challenging} data-testid="challenge">
+          <Crown className="btn-crown" />
+          <span className="btn-main">▶ {challenging ? t.sending : t.challenge}</span>
           <small>{t.challengeSub}</small>
         </button>
         {error && <p className="panel-error">{error}</p>}
@@ -62,6 +65,7 @@ export function DuelsScreen({ api, t, platform, challenging, onChallenge, onOpen
           {duels.map((d) => (
             <li key={d.id}>
               <button className={`duel-row ${d.yourTurn ? 'hot' : ''}`} onClick={() => onOpen(d.id)} data-testid="duel-row">
+                <img className="dr-face" src={PORTRAITS.bot} alt="" />
                 <span className="dr-name">{d.opponent?.name ?? '—'}</span>
                 <span className="dr-state">{rowState(d, t)}</span>
                 <span className="dr-score">
@@ -74,7 +78,9 @@ export function DuelsScreen({ api, t, platform, challenging, onChallenge, onOpen
         {me?.boards && (
           <section className="board" data-testid="board">
             <div className="board-head">
-              <h2>🏆 {t.champion}</h2>
+              <h2>
+                <Crown className="board-crown" /> {t.champion}
+              </h2>
               <div className="tabs">
                 <button className={tab === 'week' ? 'on' : ''} onClick={() => setTab('week')}>
                   {t.week}

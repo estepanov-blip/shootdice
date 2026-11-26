@@ -31,7 +31,7 @@ npm run preview    # раздать dist/ локально (http://localhost:417
 | `server/` | Cloudflare Worker + Durable Object: API дуэлей, кубики на сервере, бот, таймауты, «Чемпион чата» |
 | `src/online/` | Протокол, повтор игры из журнала бросков, клиент API, контроллер дуэли |
 | `src/platform/telegram.ts` | Мост Telegram: ready/expand, цвета, safe area, BackButton, haptics; браузерный fallback |
-| `src/assets/manifest.ts` | Карта ассетов. Заменить URL здесь, когда придёт продакшн-арт |
+| `src/assets/manifest.ts` | Карта ассетов арт-пакета v1.0 (`src/assets/art/`). Отчёт и недостающие ассеты — `docs/ART_INTEGRATION.md` |
 | `scripts/gen-placeholders.mjs` | Генератор оригинальных SVG-заглушек |
 | `scripts/qa/` | Playwright-смоук тренировки, API- и UI-e2e дуэлей (wrangler dev + mock Bot API) |
 | `docs/` | QA, отчёт, бэклог, changelog, скриншоты |

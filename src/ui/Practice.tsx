@@ -80,6 +80,8 @@ export function Practice({ t, lang, platform, reducedMotion, onHome }: Props) {
         label={btn.label}
         disabled={btn.disabled}
         waiting={btn.waiting}
+        myTurn={!btn.disabled && m.shooter === 'player' && (m.phase === 'comeOut' || m.phase === 'point')}
+        yourTurnLabel={t.yourTurn}
         onPrimary={primary}
         onLeft={onHome}
         leftLabel={t.home}
