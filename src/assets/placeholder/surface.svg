@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="720" viewBox="0 0 1080 720">
+<defs>
+  <linearGradient id="slab" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#5f5a50"/><stop offset="1" stop-color="#3a3731"/>
+  </linearGradient>
+  
+  <pattern id="grit" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <circle cx="3.5" cy="3.5" r="1.8" fill="#000" fill-opacity="0.22"/>
+  </pattern>
+  
+  <pattern id="grit2" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <circle cx="5.5" cy="5.5" r="1.4" fill="#E3C58A" fill-opacity="0.07"/>
+  </pattern>
+</defs>
+<path d="M120 40 H960 L1060 690 H20 Z" fill="url(#slab)" stroke="#141513" stroke-width="12" stroke-linejoin="round"/>
+<path d="M120 40 H960 L1060 690 H20 Z" fill="url(#grit)"/>
+<path d="M120 40 H960 L1060 690 H20 Z" fill="url(#grit2)"/>
+<path d="M210 140 H870 L930 590 H150 Z" fill="none" stroke="#E3C58A" stroke-opacity=".75" stroke-width="9" stroke-dasharray="60 14 20 14" stroke-linejoin="round"/>
+<g stroke="#141513" stroke-width="5" fill="none" opacity=".7">
+  <path d="M300 60 l40 120 l-30 80 l60 90"/><path d="M780 700 l-30 -110 l50 -70"/><path d="M60 520 l120 -30 l70 40"/>
+</g>
+<path d="M120 40 H960" stroke="#7a756a" stroke-width="10"/>
+</svg>
