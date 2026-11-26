@@ -1,13 +1,13 @@
 import Phaser from 'phaser'
 import { useEffect, useRef } from 'react'
-import type { PracticeController } from '../game/PracticeController'
+import type { ViewSource } from '../game/PracticeController'
 import { PracticeScene } from '../game/PracticeScene'
 
 /**
  * Hosts the Phaser game. Rendered at CSS size x DPR (capped at 2) and zoomed back
  * so art stays crisp on phones. Destroyed on unmount.
  */
-export function GameCanvas({ ctrl, reducedMotion }: { ctrl: PracticeController; reducedMotion: boolean }) {
+export function GameCanvas({ ctrl, reducedMotion }: { ctrl: ViewSource; reducedMotion: boolean }) {
   const host = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

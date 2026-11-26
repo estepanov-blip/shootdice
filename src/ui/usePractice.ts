@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { PracticeController, type PracticeView } from '../game/PracticeController'
+import { PracticeController, type PracticeView, type ViewSource } from '../game/PracticeController'
 import { ROLL_ANIM_MS } from '../game/PracticeScene'
 import { cryptoRng } from '../game/rng'
 
@@ -39,7 +39,7 @@ export function usePractice() {
 }
 
 const noop = () => () => {}
-export function usePracticeView(ctrl: PracticeController | null): PracticeView | null {
+export function usePracticeView(ctrl: ViewSource | null): PracticeView | null {
   return useSyncExternalStore(
     ctrl ? (fn) => ctrl.subscribe(fn) : noop,
     () => (ctrl ? ctrl.getView() : null),

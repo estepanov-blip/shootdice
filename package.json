@@ -1,17 +1,18 @@
 {
   "name": "shootdice",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "SHOOT DICE — Street Dice Club. Telegram Mini App, offline practice vertical slice.",
+  "description": "SHOOT DICE \u2014 Street Dice Club. Telegram Mini App: practice vs bot + duels with friends.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && tsc -p server/tsconfig.json && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b",
-    "deploy": "npm run build && wrangler deploy"
+    "typecheck": "tsc -b && tsc -p server/tsconfig.json",
+    "deploy": "npm run build && wrangler deploy",
+    "typecheck:server": "tsc -p server/tsconfig.json"
   },
   "engines": {
     "node": ">=20"
@@ -24,6 +25,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261125.1",
     "@types/node": "^26.6.11",
     "@types/react": "^19.3.3",
     "@types/react-dom": "^19.3.0",

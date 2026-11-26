@@ -1,0 +1,319 @@
+/**
+ * Duel domain: pure functions on top of the dice rules engine. The server is
+ * authoritative — dice come from crypto on the server and are passed in here,
+ * every transition is validated and resolved exactly once.
+ * No Workers APIs here, so this file is unit-tested with vitest.
+ */
+import { applyRoll, createMatch, matchOutcome, type MatchState } from '../src/game/rules'
+import type { DicePair } from '../src/game/rng'
+import {
+  otherSeat,
+  seatSide,
+  sideSeat,
+  TIMING,
+  type DuelResultView,
+  type DuelStatus,
+  type DuelSummary,
+  type DuelView,
+  type LoggedRoll,
+  type PlayerInfo,
+  type ResultReason,
+  type Seat,
+} from '../src/online/protocol'
+import { advance } from '../src/online/replay'
+
+export interface Settlement {
+  state: 'pending' | 'done'
+  steps: Record<string, boolean>
+  attempts: number
+  lastError?: string
+}
+
+export interface DuelResult {
+  winner: Seat | null
+  reason: ResultReason
+  finalizedAt: number
+  /** For turn_timeout: the deadline that expired. */
+  deadline?: number
+  settlement: Settlement
+}
+
+export interface DuelRecord {
+  id: string
+  status: DuelStatus
+  players: [PlayerInfo, PlayerInfo | null]
+  firstSeat: Seat | null
+  match: MatchState | null
+  log: LoggedRoll[]
+  createdAt: number
+  updatedAt: number
+  /** Group chat the challenge was accepted in ("Чемпион чата"). */
+  chatInstance: string | null
+  rematchOf: string | null
+  rematchId: string | null
+  /** userId -> last time (ms) the player looked at this duel */
+  lastSeen: Record<string, number>
+  /** When the currently expected roll became due. */
+  turnDueAt?: number
+  /** Reminder offsets already sent for roll #rollId. */
+  reminders?: { rollId: number; sent: number[] }
+  result: DuelResult | null
+  /** Origin of the Worker (links in background jobs). */
+  origin?: string
+  /** Notification keys already sent (server-side dedupe). */
+  notified?: Record<string, number>
+}
+
+export type DuelErrorCode = 'not_found' | 'own_duel' | 'taken' | 'not_player' | 'not_your_turn' | 'not_active' | 'not_over' | 'turn_expired'
+
+export class DuelError extends Error {
+  readonly code: DuelErrorCode
+  readonly status: number
+  constructor(code: DuelErrorCode, message: string, status = 409) {
+    super(message)
+    this.code = code
+    this.status = status
+  }
+}
+
+export function createDuel(id: string, challenger: PlayerInfo, now: number, origin?: string): DuelRecord {
+  return {
+    id,
+    status: 'open',
+    players: [challenger, null],
+    firstSeat: null,
+    match: null,
+    log: [],
+    createdAt: now,
+    updatedAt: now,
+    chatInstance: null,
+    rematchOf: null,
+    rematchId: null,
+    lastSeen: { [challenger.id]: now },
+    result: null,
+    origin,
+    notified: {},
+  }
+}
+
+export function seatOf(d: DuelRecord, userId: number): Seat | null {
+  if (d.players[0].id === userId) return 0
+  if (d.players[1]?.id === userId) return 1
+  return null
+}
+
+/** Seat that must roll now (null when nobody can). */
+export function shooterSeat(d: DuelRecord): Seat | null {
+  if (d.status !== 'active' || !d.match) return null
+  if (d.match.phase !== 'comeOut' && d.match.phase !== 'point') return null
+  return sideSeat(d.match.shooter)
+}
+
+export function currentPlayer(d: DuelRecord): PlayerInfo | null {
+  const s = shooterSeat(d)
+  return s === null ? null : d.players[s]
+}
+
+export function deadlineOf(d: DuelRecord): number | null {
+  if (d.status !== 'active' || d.turnDueAt === undefined) return null
+  return d.turnDueAt + TIMING.turnTimeoutMs
+}
+
+/** Accepting starts the match; `coin` (0/1, server random) decides who shoots first. */
+export function acceptDuel(d: DuelRecord, user: PlayerInfo, now: number, chatInstance: string | null, coin: Seat): { duel: DuelRecord; changed: boolean } {
+  const idx = seatOf(d, user.id)
+  if (d.status !== 'open') {
+    if (idx !== null) return { duel: d, changed: false } // idempotent re-accept
+    throw new DuelError('taken', 'Этот вызов уже принят')
+  }
+  if (idx === 0) throw new DuelError('own_duel', 'Нельзя принять собственный вызов')
+  return {
+    changed: true,
+    duel: {
+      ...d,
+      status: 'active',
+      players: [d.players[0], user],
+      firstSeat: coin,
+      match: createMatch(seatSide(coin)),
+      log: [],
+      chatInstance: chatInstance ?? d.chatInstance,
+      updatedAt: now,
+      lastSeen: { ...d.lastSeen, [user.id]: now },
+      turnDueAt: now,
+      reminders: { rollId: 1, sent: [] },
+      result: null,
+    },
+  }
+}
+
+function finalize(d: DuelRecord, winner: Seat | null, reason: ResultReason, now: number, deadline?: number): DuelRecord {
+  if (d.result) return d
+  const result: DuelResult = { winner, reason, finalizedAt: now, settlement: { state: 'pending', steps: {}, attempts: 0 } }
+  if (deadline !== undefined) result.deadline = deadline
+  return { ...d, status: 'over', updatedAt: now, result }
+}
+
+/**
+ * THE roll transition. `expected` = match.rollId the caller saw; an outdated value
+ * returns stale and changes nothing (double tap, retry). Dice are generated by the
+ * caller (server crypto) — never by the client.
+ */
+export function rollDuel(d: DuelRecord, userId: number, expected: number, dice: DicePair, now: number): { duel: DuelRecord; stale: boolean } {
+  const idx = seatOf(d, userId)
+  if (idx === null) throw new DuelError('not_player', 'Ты не участник этой игры', 403)
+  if (d.status === 'over' && d.match && d.match.rollId !== expected) return { duel: d, stale: true }
+  if (d.status !== 'active' || !d.match) throw new DuelError('not_active', 'Игра ещё не началась или уже закончена')
+  if (d.match.rollId !== expected) return { duel: d, stale: true }
+  const dl = deadlineOf(d)
+  if (dl !== null && now >= dl) throw new DuelError('turn_expired', 'Время хода истекло')
+  if (shooterSeat(d) !== idx) throw new DuelError('not_your_turn', 'Сейчас бросает соперник')
+  const res = applyRoll(d.match, dice, seatSide(idx), expected)
+  if (!res.ok) throw new DuelError('not_active', `Бросок отклонён (${res.error})`)
+  let next: DuelRecord = {
+    ...d,
+    match: advance(res.state),
+    log: [...d.log, { seat: idx, dice, at: now }],
+    updatedAt: now,
+    lastSeen: { ...d.lastSeen, [userId]: now },
+    turnDueAt: now,
+    reminders: { rollId: res.state.rollId, sent: [] },
+  }
+  if (res.state.phase === 'matchEnd') {
+    const o = matchOutcome(res.state)!
+    next = finalize(next, o.winner === null ? null : sideSeat(o.winner), 'score', now)
+  }
+  return { duel: next, stale: false }
+}
+
+/** Surrender: the other seat wins. */
+export function forfeitDuel(d: DuelRecord, userId: number, now: number): DuelRecord {
+  if (d.status !== 'active') throw new DuelError('not_active', 'Игра уже закончена')
+  const idx = seatOf(d, userId)
+  if (idx === null) throw new DuelError('not_player', 'Ты не участник этой игры', 403)
+  return finalize(d, otherSeat(idx), 'surrender', now)
+}
+
+/** Roll timeout: the shooter whose roll expired loses technically. No-op if not yet due. */
+export function timeoutDuel(d: DuelRecord, now: number): DuelRecord {
+  const dl = deadlineOf(d)
+  const s = shooterSeat(d)
+  if (dl === null || now < dl || s === null) return d
+  return finalize(d, otherSeat(s), 'turn_timeout', now, dl)
+}
+
+/** Reminder offsets (ms after turnDueAt) still to send for the current roll. */
+export function dueReminders(d: DuelRecord, now: number): number[] {
+  if (d.status !== 'active' || d.turnDueAt === undefined || !d.match || shooterSeat(d) === null) return []
+  const sent = d.reminders?.rollId === d.match.rollId ? d.reminders.sent : []
+  return TIMING.reminderOffsetsMs.filter((o) => now >= d.turnDueAt! + o && !sent.includes(o))
+}
+
+export function nextReminderAt(d: DuelRecord): number | null {
+  if (d.status !== 'active' || d.turnDueAt === undefined || !d.match || shooterSeat(d) === null) return null
+  const sent = d.reminders?.rollId === d.match.rollId ? d.reminders.sent : []
+  const left = TIMING.reminderOffsetsMs.filter((o) => !sent.includes(o))
+  return left.length ? d.turnDueAt + Math.min(...left) : null
+}
+
+export function markReminders(d: DuelRecord, offsets: number[]): DuelRecord {
+  if (!d.match) return d
+  const sent = d.reminders?.rollId === d.match.rollId ? d.reminders.sent : []
+  return { ...d, reminders: { rollId: d.match.rollId, sent: [...new Set([...sent, ...offsets])] } }
+}
+
+/**
+ * Rematch after the game. Idempotent: if the other player already asked, both land
+ * in the same new game. The loser shoots first; after a draw the other seat opens.
+ */
+export function rematchDuel(d: DuelRecord, userId: number, newId: string, now: number, origin?: string): { prev: DuelRecord; next: DuelRecord | null; id: string } {
+  if (d.status !== 'over' || !d.players[1]) throw new DuelError('not_over', 'Реванш — только после игры')
+  if (seatOf(d, userId) === null) throw new DuelError('not_player', 'Ты не участник этой игры', 403)
+  if (d.rematchId) return { prev: d, next: null, id: d.rematchId }
+  const w = d.result?.winner ?? null
+  const first: Seat = w === null ? otherSeat(d.firstSeat ?? 0) : otherSeat(w)
+  const next: DuelRecord = {
+    id: newId,
+    status: 'active',
+    players: [d.players[0], d.players[1]],
+    firstSeat: first,
+    match: createMatch(seatSide(first)),
+    log: [],
+    createdAt: now,
+    updatedAt: now,
+    chatInstance: d.chatInstance,
+    rematchOf: d.id,
+    rematchId: null,
+    lastSeen: { [userId]: now },
+    turnDueAt: now,
+    reminders: { rollId: 1, sent: [] },
+    result: null,
+    origin: origin ?? d.origin,
+    notified: {},
+  }
+  return { prev: { ...d, rematchId: newId, updatedAt: now }, next, id: newId }
+}
+
+/** Marks the player as online. Throttled to one write per 10 s (polling must stay cheap). */
+export function touch(d: DuelRecord, userId: number, now: number): DuelRecord {
+  if (seatOf(d, userId) === null) return d
+  if (now - (d.lastSeen[userId] ?? 0) < 10_000) return d
+  return { ...d, lastSeen: { ...d.lastSeen, [userId]: now } }
+}
+
+export function isOnline(d: DuelRecord, userId: number, now: number, windowMs = 20_000): boolean {
+  return now - (d.lastSeen[userId] ?? 0) < windowMs
+}
+
+export function resultView(d: DuelRecord): DuelResultView | null {
+  const r = d.result
+  return r ? { winner: r.winner, reason: r.reason, finalizedAt: r.finalizedAt } : null
+}
+
+export function toView(d: DuelRecord, viewerId: number, link: string): DuelView {
+  const me = seatOf(d, viewerId)
+  return {
+    id: d.id,
+    status: d.status,
+    players: d.players,
+    me,
+    firstSeat: d.firstSeat,
+    log: d.log,
+    match: d.match,
+    yourTurn: me !== null && shooterSeat(d) === me,
+    deadline: deadlineOf(d),
+    result: resultView(d),
+    rematchId: d.rematchId,
+    link,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
+  }
+}
+
+export function toSummary(d: DuelRecord, userId: number): DuelSummary | null {
+  const me = seatOf(d, userId)
+  if (me === null) return null
+  const m = d.match
+  const mine = m ? m.scores[seatSide(me)] : 0
+  const theirs = m ? m.scores[seatSide(otherSeat(me))] : 0
+  let result: DuelSummary['result'] = null
+  if (d.status === 'over' && d.result) result = d.result.winner === null ? 'draw' : d.result.winner === me ? 'win' : 'lose'
+  return {
+    id: d.id,
+    status: d.status,
+    me,
+    opponent: d.players[otherSeat(me)],
+    yourTurn: shooterSeat(d) === me,
+    score: [mine, theirs],
+    round: m ? Math.min(m.roundIndex + 1, m.totalRounds) : 0,
+    result,
+    updatedAt: d.updatedAt,
+  }
+}
+
+/** Readable, unguessable id usable in Telegram start_param ([A-Za-z0-9]). */
+export function newDuelId(random: (n: number) => Uint8Array): string {
+  const alphabet = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let s = ''
+  for (const b of random(12)) s += alphabet[b % alphabet.length]
+  return s
+}

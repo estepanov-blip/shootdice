@@ -45,7 +45,7 @@ type CryptoLike = { getRandomValues(array: Uint32Array<ArrayBuffer>): unknown }
  * Unbiased uniform integers from Web Crypto using rejection sampling
  * (no modulo bias). Falls back to an error, never to Math.random.
  */
-export function cryptoRng(c: CryptoLike | undefined = globalThis.crypto): Rng {
+export function cryptoRng(c: CryptoLike | undefined = (globalThis as { crypto?: CryptoLike }).crypto): Rng {
   if (!c?.getRandomValues) throw new Error('Web Crypto is not available')
   const buf = new Uint32Array(1)
   return {

@@ -1,9 +1,36 @@
-# SHOOT DICE — static frontend on Cloudflare Workers (free plan), same pipeline as Dog Fight:
-# Workers Builds: build command `npm run build`, deploy command `npx wrangler deploy` (main = production),
-# non-main branches -> preview URLs. No Worker script and no secrets in the practice milestone.
+# SHOOT DICE — game + duel server on Cloudflare Workers (free plan), same pipeline as Dog Fight:
+# Workers Builds: build `npm run build`, deploy `npx wrangler deploy` (main = production),
+# non-main branches -> preview URLs.
 name = "shootdice"
+main = "server/worker.ts"
 compatibility_date = "2026-11-01"
 
+# Built game (npm run build -> dist/). /api/* and /tg/* always go to the Worker.
 [assets]
 directory = "./dist"
-not_found_handling = "single-page-application"
+binding = "ASSETS"
+not_found_handling = "none"
+run_worker_first = ["/api/*", "/tg/*"]
+
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "GameStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameStore"]
+
+[observability]
+enabled = true
+
+# Previews (non-main branches): isolated GameStore, no secrets (no BOT_TOKEN ->
+# duel buttons stay hidden, practice works). Production ignores this block.
+[previews]
+
+[[previews.durable_objects.bindings]]
+name = "STORE"
+class_name = "GameStore"
+
+# Secret (Worker -> Settings -> Variables and Secrets, type Secret):
+#   BOT_TOKEN = <token from @BotFather>
+# Optional rollback flag (type Text): DUEL_JOBS = pause  (stops reminders/timeouts)

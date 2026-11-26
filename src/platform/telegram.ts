@@ -16,7 +16,10 @@ interface TgWebApp {
   platform: string
   initData: string
   colorScheme?: 'light' | 'dark'
-  initDataUnsafe?: { user?: { language_code?: string } }
+  initDataUnsafe?: { start_param?: string; user?: { language_code?: string; allows_write_to_pm?: boolean } }
+  shareMessage?(id: string, cb?: (sent: boolean) => void): void
+  openTelegramLink?(url: string): void
+  requestWriteAccess?(cb?: (granted: boolean) => void): void
   safeAreaInset?: Insets
   contentSafeAreaInset?: Insets
   ready(): void
@@ -48,8 +51,27 @@ export interface Platform {
   inTelegram: boolean
   platformName: string
   langHint: string | null
+  /** Raw signed launch data; sent to the server as `Authorization: tma <initData>`. */
+  initData: string
+  /** Game to open on launch: `startapp=d_<id>` (chat card) or `?duel=<id>` (bot button). */
+  startDuelId: string | null
   haptic(kind: 'roll' | 'win' | 'lose'): void
   setBackHandler(fn: (() => void) | null): void
+  /** Native share sheet with a prepared message (Bot API 8.0), else the t.me share link. */
+  share(prepared: string | null, link: string, text: string): Promise<boolean>
+  /** Opt-in for bot messages ("твой бросок"). */
+  requestWriteAccess(): Promise<boolean>
+}
+
+const ID_RE = /^[A-Za-z0-9]{6,32}$/
+
+function queryDuelId(): string | null {
+  try {
+    const q = new URLSearchParams(window.location.search).get('duel')
+    return q && ID_RE.test(q) ? q : null
+  } catch {
+    return null
+  }
 }
 
 export function launchedFromTelegram(hash = typeof location !== 'undefined' ? location.hash : ''): boolean {
@@ -89,6 +111,10 @@ const browserPlatform: Platform = {
   inTelegram: false,
   platformName: 'browser',
   langHint: null,
+  initData: '',
+  startDuelId: null,
+  share: async () => false,
+  requestWriteAccess: async () => false,
   haptic: (kind) => {
     try {
       navigator.vibrate?.(kind === 'roll' ? 15 : kind === 'win' ? [20, 40, 20] : 40)
@@ -135,9 +161,44 @@ export async function initPlatform(): Promise<Platform> {
   const hasBack = at('6.1') && !!wa.BackButton
   if (hasBack) wa.BackButton!.onClick(onBack)
 
+  const sp = wa.initDataUnsafe?.start_param ?? ''
+  const startDuelId = sp.startsWith('d_') && ID_RE.test(sp.slice(2)) ? sp.slice(2) : queryDuelId()
+
   return {
     inTelegram: true,
     platformName: wa.platform || 'telegram',
+    initData: wa.initData || '',
+    startDuelId,
+    share: (prepared, link, text) =>
+      new Promise((resolve) => {
+        try {
+          if (prepared && wa.shareMessage && at('8.0')) {
+            wa.shareMessage(prepared, (sent) => resolve(!!sent))
+            return
+          }
+        } catch {
+          /* fall through to the link */
+        }
+        const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`
+        try {
+          if (wa.openTelegramLink) wa.openTelegramLink(url)
+          else window.open(url, '_blank')
+        } catch {
+          /* ignore */
+        }
+        resolve(true)
+      }),
+    requestWriteAccess: () => {
+      if (wa.initDataUnsafe?.user?.allows_write_to_pm) return Promise.resolve(true)
+      if (!wa.requestWriteAccess || !at('6.9')) return Promise.resolve(false)
+      return new Promise((resolve) => {
+        try {
+          wa.requestWriteAccess!((ok) => resolve(!!ok))
+        } catch {
+          resolve(false)
+        }
+      })
+    },
     langHint: wa.initDataUnsafe?.user?.language_code ?? null, // UI hint only, never trusted
     haptic: (kind) => {
       if (!at('6.1') || !wa.HapticFeedback) return

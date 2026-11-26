@@ -54,7 +54,14 @@ export interface PracticeOptions {
 
 type Listener = (view: PracticeView) => void
 
-export class PracticeController {
+/** What the Phaser scene needs: a view stream and a way to report that the dice landed. */
+export interface ViewSource {
+  getView(): PracticeView
+  subscribe(fn: Listener): () => void
+  finishRoll(rollId: number): boolean
+}
+
+export class PracticeController implements ViewSource {
   private readonly rng: Rng
   private readonly firstShooter: Side
   private readonly botDelayMs: number
